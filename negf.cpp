@@ -1,6 +1,8 @@
 #include <iostream>
+#include <cstdlib>
 #include <eigen3/Eigen/Dense>
 #include <complex>
+#include <assert.h>
 using namespace std;
 using namespace Eigen;
 
@@ -35,19 +37,24 @@ complex<double> sfg_solve (double e, double t)
     return lambda2*t;
 }
 
-int main ()
+int main (int argc, char* argv[])
 {
-  int L = 32;
-  int N = 3000;
+  int L = 10;
+  int N = 1000000;
   double h = 1;
-  double dw = 8*PI/N;
+  double dw = 4.1/N;
   double* T = new double[N];
 
-  double TL = 5;
-  double TR = 5;
-  double uL = -1.8;
-  double uR = -1.9;
+  double TL = 500;
+  double TR = 500;
+  double uL = atof(argv[1]);
+  double uR = -2;
   
+  cout<<"TL = "<<TL<<endl;
+  cout<<"TR = "<<TR<<endl;
+  cout<<"uL = "<<uL<<endl;
+  cout<<"uR = "<<uR<<endl;
+
   MatrixXcd Gr(L,L);
   MatrixXcd Ga(L,L);
   MatrixXcd Sigma_L(L,L);
@@ -76,19 +83,20 @@ int main ()
       double w = (i-N/2)*dw;
       W.setIdentity ();
       W *= w;
-      Sigma_L(0,0) = sfg_solve (w,h);
-      Sigma_R(L-1,L-1) = sfg_solve (w,h); 
-      Gamma_L(0,0) = imag (Sigma_L(0,0));
-      Gamma_R(L-1,L-1) = imag (Sigma_R(L-1,L-1));
+      Sigma_L(0,0) = sfg_solve (w,1);
+      Sigma_R(L-1,L-1) = sfg_solve (w,1); 
+      Gamma_L(0,0) = -2*imag (Sigma_L(0,0));
+      Gamma_R(L-1,L-1) = -2*imag (Sigma_R(L-1,L-1));
       Ga = W-Tcc-(Sigma_L+Sigma_R);
       Gr = Ga.inverse ();
       Ga = Gr.conjugate ();
       tmp = (Gr*Gamma_L*Ga*Gamma_R);
       T[i] = real(tmp.trace());
-      
+      assert (T[i] >= 0);
       I += T[i]*(fermi(w,uL,TL) - fermi(w,uR,TR));
       Ie += w*T[i]*(fermi(w,uL,TL) - fermi(w,uR,TR));
     }
-  cout<<I*dw<<endl;
-  cout<<Ie*dw<<endl;
+  cout<<"number current = "<<I*dw/(2*PI)<<endl;
+  cout<<"energy current = "<<Ie*dw/(2*PI)<<endl;
+  cout<<"heat current = "<<(Ie-uL*I)*dw/(2*PI)<<endl;
 }

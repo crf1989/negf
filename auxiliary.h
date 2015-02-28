@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <math.h>
 #include <complex.h>
+#include <assert.h>
 
 const double PI = 3.141592653589793;
 const double BOLTZMANN_CONSTANT = 8.6173324e-5;
@@ -81,8 +82,8 @@ double fermi (double e, double u, double T)
 
 double complex sfg_solve (double e, double t)
 {
-  double complex lambda1 = 0.5*(e/t-csqrt(square(e/t)-4));
-  double complex lambda2 = 0.5*(e/t+csqrt(square(e/t)-4));
+  double complex lambda1 = 0.5*((e+1e-6*I)/t-csqrt(square((e+1e-6*I)/t)-4));
+  double complex lambda2 = 0.5*((e+1e-6*I)/t+csqrt(square((e+1e-6*I)/t)-4));
   if (cabs(lambda1) <= 1)
     return lambda1*t;
   else
